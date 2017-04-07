@@ -1,5 +1,9 @@
 # silly macOS
 .DS_Store
+.cproject
+.project
+.settings
 
 # build files
 build/
+/Debug/
