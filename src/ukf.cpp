@@ -12,6 +12,9 @@ using std::vector;
  * Initializes Unscented Kalman filter
  */
 UKF::UKF() {
+  //set state dimension
+  n_x_ = 5;
+
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = true;
 
@@ -19,13 +22,13 @@ UKF::UKF() {
   use_radar_ = true;
 
   // initial state vector
-  x_ = VectorXd(5);
+  x_ = VectorXd(n_x_);
 
   // initial covariance matrix
-  P_ = MatrixXd(5, 5);
+  P_ = MatrixXd(n_x_, n_x_);
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 30;
+  std_a_ = 3.0; // we were given 30, but from video guidance max should be 6 and sigma should be half that
 
   // Process noise standard deviation yaw acceleration in rad/s^2
   std_yawdd_ = 30;
@@ -37,7 +40,7 @@ UKF::UKF() {
   std_laspy_ = 0.15;
 
   // Radar measurement noise standard deviation radius in m
-  std_radr_ = 0.3;
+  std_radr_ = 0.3; //(sigma rho)
 
   // Radar measurement noise standard deviation angle in rad
   std_radphi_ = 0.03;
@@ -52,6 +55,30 @@ UKF::UKF() {
 
   Hint: one or more values initialized above might be wildly off...
   */
+  Xsig_pred_ = MatrixXd(n_x_, 2 * n_x_ + 1);
+
+  //set augmented dimension
+  n_aug_ = 7;
+
+  //define spreading parameter
+  lambda_ = 3 - n_aug_;
+
+  //set vector for weights
+  weights_ = VectorXd(2*n_aug_+1);
+   double weight_0 = lambda_/(lambda_+n_aug_);
+  weights_(0) = weight_0;
+  for (int i=1; i<2*n_aug_+1; i++) {
+    double weight = 0.5/(n_aug_+lambda_);
+    weights_(i) = weight;
+  }
+
+  NIS_laser_ = 0.103; // two degrees of freedom, 95% chi-sq value
+  NIS_radar_ = 0.352; // three degrees of freedom, 95% chi-sq value
+  is_initialized_= false;
+
+  time_us_ = 0; // TODO, this is a WAG, need to revisit it
+
+
 }
 
 UKF::~UKF() {}

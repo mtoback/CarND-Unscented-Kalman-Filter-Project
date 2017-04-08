@@ -21,7 +21,13 @@ void check_arguments(int argc, char* argv[]) {
 
   bool has_valid_args = false;
 
-  // make sure the user has provided input and output files
+  /**
+   * make sure the user has provided input and output files
+   * that would be 3 arguments
+   * (program_name input_file output_file)
+   *
+   * If number of parameters is incorrect, exit program
+   */
   if (argc == 1) {
     cerr << usage_instructions << endl;
   } else if (argc == 2) {
@@ -37,6 +43,11 @@ void check_arguments(int argc, char* argv[]) {
   }
 }
 
+/**
+ * verify that input and output file names are correct
+ *
+ * If either not available exit program
+ */
 void check_files(ifstream& in_file, string& in_name,
                  ofstream& out_file, string& out_name) {
   if (!in_file.is_open()) {
@@ -52,14 +63,24 @@ void check_files(ifstream& in_file, string& in_name,
 
 int main(int argc, char* argv[]) {
 
+  /**
+   * right number of arguments?
+   * If not exit
+   */
   check_arguments(argc, argv);
 
+  /**
+   * get file objects from first two arguments
+   */
   string in_file_name_ = argv[1];
   ifstream in_file_(in_file_name_.c_str(), ifstream::in);
 
   string out_file_name_ = argv[2];
   ofstream out_file_(out_file_name_.c_str(), ofstream::out);
 
+  /**
+   * are they accessible? If not exit
+   */
   check_files(in_file_, in_file_name_, out_file_, out_file_name_);
 
   /**********************************************
@@ -80,7 +101,10 @@ int main(int argc, char* argv[]) {
     istringstream iss(line);
     long long timestamp;
 
-    // reads first element from the current line
+    /**
+     * reads first element (Sensor type) from the current line
+     * either an R or L, or we have a problem
+     */
     iss >> sensor_type;
 
     if (sensor_type.compare("L") == 0) {
@@ -113,6 +137,8 @@ int main(int argc, char* argv[]) {
       iss >> timestamp;
       meas_package.timestamp_ = timestamp;
       measurement_pack_list.push_back(meas_package);
+    } else { // not R or L, should never get here. Means badly formatted file
+    	cout << "problem with line " << line << endl;
     }
 
       // read ground truth data to compare later
@@ -204,8 +230,8 @@ int main(int argc, char* argv[]) {
 
     float x_estimate_ = ukf.x_(0);
     float y_estimate_ = ukf.x_(1);
-    float vx_estimate_ = ukf.x_(2) * cos(ukf.x_(3));
-    float vy_estimate_ = ukf.x_(2) * sin(ukf.x_(3));
+    float vx_estimate_ = ukf.x_(2) * cos((double)ukf.x_(3));
+    float vy_estimate_ = ukf.x_(2) * sin((double)ukf.x_(3));
     
     ukf_x_cartesian_ << x_estimate_, y_estimate_, vx_estimate_, vy_estimate_;
     
