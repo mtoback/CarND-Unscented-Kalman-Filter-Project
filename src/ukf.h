@@ -62,6 +62,9 @@ public:
   ///* State dimension
   int n_x_;
 
+  ///* Measurement state dimension
+  int n_z_;
+
   ///* Augmented state dimension
   int n_aug_;
 
@@ -74,6 +77,11 @@ public:
   ///* the current NIS for laser
   double NIS_laser_;
 
+  // predicted measurement
+  VectorXd z_pred_;
+
+  // Predicted measurement covariance
+  MatrixXd S_;
   /**
    * Constructor
    */
