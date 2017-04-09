@@ -119,6 +119,10 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 	      /**
 	      Convert radar from polar to cartesian coordinates and initialize state.
 	      */
+		  double rho = meas_package.raw_measurements_[0];
+		  double phi = meas_package.raw_measurements_[1];
+	      double rho_dot = meas_package.raw_measurements_[2];
+		  x_ << rho*cos(phi), rho*sin(phi), 0.0, 0.0, 0.0;
 
 	    }
 	    else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
