@@ -77,6 +77,9 @@ public:
   ///* the current NIS for laser
   double NIS_laser_;
 
+  // measurement vector
+  VectorXd z_;
+
   // predicted measurement
   VectorXd z_pred_;
 

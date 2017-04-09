@@ -119,6 +119,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 	      /**
 	      Convert radar from polar to cartesian coordinates and initialize state.
 	      */
+
 	    }
 	    else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
 	      /**
@@ -198,9 +199,6 @@ void UKF::Prediction(double delta_t) {
   MatrixXd Xsig_pred = MatrixXd(n_x_, 2 * n_aug_ + 1);
 
   double delta_t2 =pow(delta_t, 2);
-/*******************************************************************************
- * Student part begin
- ******************************************************************************/
 
   //predict sigma points
   for (int i = 0; i< 2*n_aug_ +1; i++)
@@ -281,6 +279,9 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   You'll also need to calculate the lidar NIS.
   */
+	z_ = VectorXd(3);
+	z_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1],
+			meas_package.raw_measurements_[2];
 	  //create matrix for cross correlation Tc
 	  MatrixXd Tc = MatrixXd(n_x_, n_z_);
 	  //create matrix for sigma points in measurement space

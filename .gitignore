@@ -4,6 +4,8 @@
 .project
 .settings
 
+output-1.txt
+output-2.txt
 # build files
 build/
 /Debug/
