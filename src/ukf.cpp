@@ -39,7 +39,7 @@ UKF::UKF() {
   std_a_ = 3.0; // we were given 30, but from video guidance max should be 6 and sigma should be half that
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 30;
+  std_yawdd_ = 0.1;// given 30;
 
   // Laser measurement noise standard deviation position1 in m
   std_laspx_ = 0.15;
@@ -51,10 +51,10 @@ UKF::UKF() {
   std_radr_ = 0.3; //(sigma rho)
 
   // Radar measurement noise standard deviation angle in rad
-  std_radphi_ = 0.03;
+  std_radphi_ = 0.0175;
 
   // Radar measurement noise standard deviation radius change in m/s
-  std_radrd_ = 0.3;
+  std_radrd_ = 0.1;
 
   /**
   TODO:
@@ -69,7 +69,7 @@ UKF::UKF() {
   n_aug_ = 7;
 
   //define spreading parameter
-  lambda_ = 3 - n_aug_;
+  lambda_ = 3 - n_x_;
 
   //set vector for weights
   weights_ = VectorXd(2*n_aug_+1);
@@ -84,7 +84,7 @@ UKF::UKF() {
   NIS_radar_ = 0.352; // three degrees of freedom, 95% chi-sq value
   is_initialized_= false;
 
-  time_us_ = 0; // TODO, this is a WAG, need to revisit it
+  time_us_ = 0; // previous timestamp
 
   S_  = MatrixXd(n_z_,n_z_);
 
@@ -123,13 +123,21 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 		  double phi = meas_package.raw_measurements_[1];
 	      double rho_dot = meas_package.raw_measurements_[2];
 		  x_ << rho*cos(phi), rho*sin(phi), 0.0, 0.0, 0.0;
-
+		  time_us_ = meas_package.timestamp_;
 	    }
 	    else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
 	      /**
 	      Initialize state.
 	      */
+			//set the state with the initial location and zero velocity
+			x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0;
+
+			time_us_ = meas_package.timestamp_;
 	    }
+		  is_initialized_ = true;
+		  return;
+	  }
+
 	    // if x and y values are 0, set to 0.1
 		if ( abs((double)x_[0]) < 0.1 && abs((double)x_[1]) < 0.1)
 		{
@@ -137,11 +145,15 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 			x_[1] = 0.1;
 
 		}
-	    // done initializing, no need to predict or update
-	    is_initialized_ = true;
-	    return;
-	  }
-}
+		double delta_t = (meas_package.timestamp_ - time_us_)/ 1000000.0;	//dt - expressed in seconds
+		time_us_ = meas_package.timestamp_;
+		Prediction(delta_t);
+		if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+			UpdateLidar(meas_package);
+		} else {
+			UpdateRadar(meas_package);
+		}
+	}
 
 /**
  * Predicts sigma points, the state, and the state covariance matrix.
@@ -283,7 +295,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   You'll also need to calculate the lidar NIS.
   */
-	z_ = VectorXd(3);
+	z_ = VectorXd(2);
 	z_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1],
 			meas_package.raw_measurements_[2];
 	  //create matrix for cross correlation Tc
@@ -324,6 +336,9 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 	  //update state mean and covariance matrix
 	  x_ = x_ + K*z_diff;
 	  P_ = P_ - K * S_ * K.transpose();
+
+	  NIS_laser_ = z_diff.transpose()*S_.inverse()*z_diff;
+	  cout << "NIS for lidar = " << NIS_laser_ << endl;
 }
 
 /**
@@ -376,6 +391,8 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 	    while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
 
 	    S = S + weights_(i) * z_diff * z_diff.transpose();
+	    NIS_radar_ = z_diff.transpose()*S_.inverse()*z_diff;
+		cout << "NIS for radar = " << NIS_radar_ << endl;
 	  }
 
 	  //add measurement noise covariance matrix
