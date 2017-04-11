@@ -17,6 +17,9 @@ public:
   ///* initially set to false, set to true in first call of ProcessMeasurement
   bool is_initialized_;
 
+  // need to use basic sqrt calculation on first datapoint
+  bool is_first_datapoint_;
+
   ///* if this is false, laser measurements will be ignored (except for init)
   bool use_laser_;
 
@@ -28,6 +31,9 @@ public:
 
   ///* state covariance matrix
   MatrixXd P_;
+
+  ///* sigma point matrix
+  MatrixXd Xsig_;
 
   ///* predicted sigma points matrix
   MatrixXd Xsig_pred_;
@@ -85,6 +91,9 @@ public:
 
   // Predicted measurement covariance
   MatrixXd S_;
+
+  // previous measurement (in case we need to restart process due to numerical instability
+  MeasurementPackage previous_measurement_;
   /**
    * Constructor
    */
@@ -119,6 +128,12 @@ public:
    * @param meas_package The measurement at k+1
    */
   void UpdateRadar(MeasurementPackage meas_package);
+
+  /**
+   * initialize or reinitialize measurement (in case of Cholesky transform failure)
+   */
+  void InitializeMeasurement(MeasurementPackage meas_package);
+
 };
 
 #endif /* UKF_H */
