@@ -134,6 +134,18 @@ public:
    */
   void InitializeMeasurement(MeasurementPackage meas_package);
 
+  /**
+   * Initialize weights per ACC02 paper
+   */
+  void InitializeWeights();
+
+  /**
+   * generate the sigma points
+   */
+  void GenerateSigmaPoints();
+
 };
+
+
 
 #endif /* UKF_H */
