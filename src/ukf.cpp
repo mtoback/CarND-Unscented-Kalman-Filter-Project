@@ -40,10 +40,10 @@ UKF::UKF() {
 		  0, 0, 0,   1000.0, 0,
 		  0, 0, 0,   0,    1000.0;
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 2.5; // we were given 30, but from video guidance max should be much smaller
+  std_a_ = 5.0; // we were given 30, but from video guidance max should be much smaller
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 0.5;// given 30 but again should be much smaller;
+  std_yawdd_ = 3.0;// given 30 but again should be much smaller;
 
   // Laser measurement noise standard deviation position1 in m
   std_laspx_ = 0.15;
@@ -92,6 +92,7 @@ UKF::UKF() {
   time_us_ = 0; // previous timestamp
 
   S_  = MatrixXd(n_z_,n_z_);
+  S_.fill(0.0);
 
 
 }
@@ -119,9 +120,6 @@ void UKF::InitializeMeasurement(MeasurementPackage meas_package){
       * Remember: you'll need to convert radar from polar to cartesian coordinates.
     */
 	// first measurement
-    cout << "Initialize x_: " << endl;
-    for (int i=0; i< n_x_ ;i++)
-    	x_(i) = 1;
 
     if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
       /**
@@ -130,24 +128,30 @@ void UKF::InitializeMeasurement(MeasurementPackage meas_package){
 	  double rho = meas_package.raw_measurements_[0];
 	  double phi = meas_package.raw_measurements_[1];
       double rho_dot = meas_package.raw_measurements_[2];
-	  x_ << rho*cos(phi), rho*sin(phi), 0.0, 0.0, 0.0;
+	  x_ << rho*cos(phi), rho*sin(phi), rho_dot*cos(phi), 0.0, 0.0;
+	  cout << "Initialize x_: " << endl;
+	  for (int i=0; i< n_x_ ;i++)
+		 x_(i) = 1;
 	  time_us_ = meas_package.timestamp_;
     }
     else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
       /**
       Initialize state.
       */
-		//set the state with the initial location and zero velocity
-		x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0.0, 0.0, 0.0;
+	  //set the state with the initial location and zero velocity
+	  x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0.0, 0.0, 0.0;
+	  cout << "Initialize x_: " << endl;
+	  for (int i=0; i< n_x_ ;i++)
+		 x_(i) = 1;
 
 		time_us_ = meas_package.timestamp_;
     }
     is_first_datapoint_ = true;
     P_ << 1, 0, 0,   0,    0,
   		  0, 1, 0,   0,    0,
-  		  0, 0, 2,0,    0,
-  		  0, 0, 0,   2, 0,
-  		  0, 0, 0,   0,    2;
+  		  0, 0, 100.0,   0,    0,
+  		  0, 0, 0,   100.0,    0,
+  		  0, 0, 0,   0,    100.0;
 
 }
 /**
@@ -549,7 +553,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 	  //create matrix for sigma points in measurement space
 	  MatrixXd Zsig = MatrixXd(n_z_, 2 * n_aug_ + 1);
 	  //transform sigma points into measurement space
-	  for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 simga points
+	  for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 sigma points
 
 	    // extract values for better readability
 	    double p_x = Xsig_pred_(0,i);
@@ -568,9 +572,9 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 	    	p_y = 0.0001;
 	    }
 	    // measurement model
-	    Zsig(0,i) = meas_package.raw_measurements_[0];  //r
-	    Zsig(1,i) = meas_package.raw_measurements_[1];  //phi
-	    Zsig(2,i) = meas_package.raw_measurements_[0];  //r_dot
+	    Zsig(0,i) = sqrt(p_x*p_x + p_y*p_y);             //r
+	    Zsig(1,i) = atan2(p_y,p_x);                      //phi
+	    Zsig(2,i) = (p_x*v1 + p_y*v2 ) / sqrt(p_x*p_x + p_y*p_y);   //r_dot
 	  }
 
 	  z_pred_.fill(0.0);
@@ -580,7 +584,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
 	  //measurement covariance matrix S
 	  S_.fill(0.0);
-	  for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 simga points
+	  for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 sigma points
 	    //residual
 	    VectorXd z_diff = Zsig.col(i) - z_pred_;
 
