@@ -70,6 +70,8 @@ int main(int argc, char* argv[]) {
   vector<GroundTruthPackage> gt_pack_list;
 
   string line;
+  // Create a UKF instance
+  UKF ukf;
 
   // prep the measurement packages (each line represents a measurement at a
   // timestamp)
@@ -83,7 +85,7 @@ int main(int argc, char* argv[]) {
     // reads first element from the current line
     iss >> sensor_type;
 
-    if (sensor_type.compare("L") == 0) {
+    if (sensor_type.compare("L") == 0 && ukf.use_laser_) {
       // laser measurement
 
       // read measurements at this timestamp
@@ -97,7 +99,7 @@ int main(int argc, char* argv[]) {
       iss >> timestamp;
       meas_package.timestamp_ = timestamp;
       measurement_pack_list.push_back(meas_package);
-    } else if (sensor_type.compare("R") == 0) {
+    } else if (sensor_type.compare("R") == 0 && ukf.use_radar_) {
       // radar measurement
 
       // read measurements at this timestamp
@@ -129,8 +131,6 @@ int main(int argc, char* argv[]) {
       gt_pack_list.push_back(gt_package);
   }
 
-  // Create a UKF instance
-  UKF ukf;
 
   // used to compute the RMSE later
   vector<VectorXd> estimations;
@@ -204,8 +204,8 @@ int main(int argc, char* argv[]) {
 
     float x_estimate_ = ukf.x_(0);
     float y_estimate_ = ukf.x_(1);
-    float vx_estimate_ = ukf.x_(2) * cos(ukf.x_(3));
-    float vy_estimate_ = ukf.x_(2) * sin(ukf.x_(3));
+    float vx_estimate_ = ukf.x_(2) * cos((double)ukf.x_(3));
+    float vy_estimate_ = ukf.x_(2) * sin((double)ukf.x_(3));
     
     ukf_x_cartesian_ << x_estimate_, y_estimate_, vx_estimate_, vy_estimate_;
     

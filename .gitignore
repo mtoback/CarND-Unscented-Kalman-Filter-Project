@@ -1,5 +1,11 @@
 # silly macOS
 .DS_Store
-
+.cproject
+.settings
+.project
+gmon.out
+kalman_tracker_linux
+out*.txt
 # build files
 build/
+/Debug/
