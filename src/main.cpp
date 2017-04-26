@@ -91,6 +91,8 @@ int main(int argc, char* argv[]) {
   vector<GroundTruthPackage> gt_pack_list;
 
   string line;
+  // Create a UKF instance
+  UKF ukf;
 
   // prep the measurement packages (each line represents a measurement at a
   // timestamp)
@@ -107,7 +109,7 @@ int main(int argc, char* argv[]) {
      */
     iss >> sensor_type;
 
-    if (sensor_type.compare("L") == 0) {
+    if (sensor_type.compare("L") == 0 && ukf.use_laser_) {
       // laser measurement
 
       // read measurements at this timestamp
@@ -121,7 +123,7 @@ int main(int argc, char* argv[]) {
       iss >> timestamp;
       meas_package.timestamp_ = timestamp;
       measurement_pack_list.push_back(meas_package);
-    } else if (sensor_type.compare("R") == 0) {
+    } else if (sensor_type.compare("R") == 0 && ukf.use_radar_) {
       // radar measurement
 
       // read measurements at this timestamp
@@ -155,8 +157,6 @@ int main(int argc, char* argv[]) {
       gt_pack_list.push_back(gt_package);
   }
 
-  // Create a UKF instance
-  UKF ukf;
 
   // used to compute the RMSE later
   vector<VectorXd> estimations;
