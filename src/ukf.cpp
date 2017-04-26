@@ -34,16 +34,16 @@ UKF::UKF() {
 
   // initialize covariance matrix to large values, positive definite
   P_ = MatrixXd(n_x_, n_x_);
-  P_ <<     1, 0, 0,   0,    0,
-		  0, 1, 0,   0,    0,
-		  0, 0, 1000.0,0,    0,
-		  0, 0, 0,   1000.0, 0,
-		  0, 0, 0,   0,    1000.0;
+  P_ <<     0.5, 0, 0,   0,    0,
+		  0, 0.5, 0,   0,    0,
+		  0, 0, 0.25,0,    0,
+		  0, 0, 0,   0.25, 0,
+		  0, 0, 0,   0,    0.25;
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 0.5;
+  std_a_ = 1.5;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 0.5;
+  std_yawdd_ = 0.4;
 
   // Laser measurement noise standard deviation position1 in m
   std_laspx_ = 0.15;
@@ -109,7 +109,7 @@ void UKF::InitializeMeasurement(MeasurementPackage meas_package){
     	  VectorXd z = VectorXd(3);
     	  z << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1],
     			  meas_package.raw_measurements_[2];
-		  x_ << z[0]*cos((double)z[1]), z[0]*sin((double)z[1]), 0.0, 0.0, 0.0;
+		  x_ << z[0]*sin((double)z[1]), z[0]*cos((double)z[1]), fabs((double)meas_package.raw_measurements_[2]), -meas_package.raw_measurements_[1] + M_PI/2, 0.0;
 		  time_us_  = meas_package.timestamp_;
 		  previous_measurement_ = meas_package;
 		  cout << "initial x_ = " << endl << x_ << endl;
@@ -119,17 +119,17 @@ void UKF::InitializeMeasurement(MeasurementPackage meas_package){
       Initialize state.
       */
 		//set the state with the initial location and zero velocity
-		x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0, 0;
+		x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 1, M_PI, 0;
 
 		time_us_ = meas_package.timestamp_;
 		previous_measurement_ = meas_package;
 		cout << "initial x_ = " << endl << x_ << endl;
     }
-    // if x and y values are 0, set to 0.01
+    // if x and y values are near 0, set to 0.01
 	if ( fabs(x_[0]) < 0.01 && fabs(x_[1]) < 0.01)
 	{
-		x_[0] = 0.1;
-		x_[1] = 0.1;
+		x_[0] = 0.01;
+		x_[1] = 0.01;
 
 	}
     // done initializing, no need to predict or update
