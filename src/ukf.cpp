@@ -40,10 +40,10 @@ UKF::UKF() {
 		  0, 0, 0,   0.25, 0,
 		  0, 0, 0,   0,    0.25;
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 0.5;
+  std_a_ = 1.5;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 0.6;
+  std_yawdd_ = 3.0;
 
   // Laser measurement noise standard deviation position1 in m
   std_laspx_ = 0.15;
@@ -109,7 +109,7 @@ void UKF::InitializeMeasurement(MeasurementPackage meas_package){
     	  VectorXd z = VectorXd(3);
     	  z << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1],
     			  meas_package.raw_measurements_[2];
-		  x_ << z[0]*sin((double)z[1]), z[0]*cos((double)z[1]), fabs((double)meas_package.raw_measurements_[2]), -meas_package.raw_measurements_[1] + M_PI/2, 0.0;
+		  x_ << z[0]*cos((double)z[1]), z[0]*sin((double)z[1]), 0.0, 0.0, 0.0;
 		  time_us_  = meas_package.timestamp_;
 		  previous_measurement_ = meas_package;
 		  cout << "initial x_ = " << endl << x_ << endl;
@@ -119,7 +119,7 @@ void UKF::InitializeMeasurement(MeasurementPackage meas_package){
       Initialize state.
       */
 		//set the state with the initial location and zero velocity
-		x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 1, M_PI, 0;
+		x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0.0, 0.0, 0;
 
 		time_us_ = meas_package.timestamp_;
 		previous_measurement_ = meas_package;
