@@ -96,11 +96,11 @@ void UKF::InitializeMeasurement(MeasurementPackage meas_package){
     x_ = VectorXd(n_x_);
     x_ << 1, 1, 0, 0 ,0;
     P_ = MatrixXd(n_x_, n_x_);
-    P_ << 1, 0, 0, 0,0,
-    0, 1, 0, 0,0,
-    0, 0, 1, 0,0,
-    0, 0, 0, 1,0,
-    0,0,0,0,1;
+    P_ <<  0.5, 0, 0,   0,    0,
+  		  0, 0.5, 0,   0,    0,
+  		  0, 0, 0.25,0,    0,
+  		  0, 0, 0,   0.25, 0,
+  		  0, 0, 0,   0,    0.25;
 
     if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
       /**
